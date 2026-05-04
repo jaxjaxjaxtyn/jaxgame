@@ -1034,8 +1034,9 @@
   let answer       = 0;
   let feedbackTmr  = null;
   let levelAtStart = 1;
-  let isFrozen     = false;
+  let isFrozen       = false;
   let freezeInterval = null;
+  let wrongCount     = 0;   // resets each new question
 
   // ══════════════════════════════════════════════════
   //  DOM
@@ -1113,11 +1114,14 @@
   homeBtn.addEventListener('click', () => { clearFreeze(); showHome(); });
 
   // ══════════════════════════════════════════════════
-  //  FREEZE (wrong answer → 60-second lock)
+  //  FREEZE (wrong answer → timed lock)
+  //  1st wrong on a question → 6s
+  //  2nd wrong on same question → 12s
+  //  resets to 6s on next question
   // ══════════════════════════════════════════════════
-  function startFreeze() {
+  function startFreeze(seconds) {
     isFrozen = true;
-    let remaining = 60;
+    let remaining = seconds;
 
     document.querySelectorAll('.choice-btn').forEach(btn => {
       btn.disabled = true;
@@ -1166,6 +1170,7 @@
   // ══════════════════════════════════════════════════
   function newQuestion() {
     clearFeedback();
+    wrongCount = 0;   // reset per-question wrong counter
     const level = getLevelFromScore(scores[currentTopic]);
     levelAtStart = level;
     const max = getMaxForLevel(level);
@@ -1320,8 +1325,10 @@
       }
 
     } else {
+      wrongCount++;
+      const freezeSecs = wrongCount >= 2 ? 12 : 6;
       shakeBtns();
-      startFreeze();
+      startFreeze(freezeSecs);
     }
   }
 
